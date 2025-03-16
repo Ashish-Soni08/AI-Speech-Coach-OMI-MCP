@@ -297,6 +297,9 @@ def setup_mcp_server():
     logger.info("Setting up MCP server")
     return mcp_server
 
+# Export the server instance - makes it accessible via import
+__all__ = ["mcp_server", "setup_mcp_server"]
+
 
 if __name__ == "__main__":
     # Run the MCP server directly if this file is executed

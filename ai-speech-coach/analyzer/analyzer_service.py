@@ -8,6 +8,7 @@ import asyncio
 # Import analyzer components
 from analyzer.filler_words import FillerWordAnalyzer, count_words
 from analyzer.pace import PaceAnalyzer
+from analyzer.vocabulary import VocabularyAnalyzer
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ class SpeechAnalyzerService:
         """Initialize the speech analyzer service with all component analyzers."""
         self.filler_word_analyzer = FillerWordAnalyzer()
         self.pace_analyzer = PaceAnalyzer()
+        self.vocabulary_analyzer = VocabularyAnalyzer()
         logger.info("SpeechAnalyzerService initialized with all analyzer components")
     
     async def analyze_transcript(self, transcript_segments: List[Dict]) -> Dict:
@@ -98,7 +100,7 @@ class SpeechAnalyzerService:
         analyses = await asyncio.gather(
             self._analyze_filler_words(combined_text),
             self._analyze_pace(user_segments),
-            self._analyze_vocabulary_diversity(combined_text)
+            self._analyze_vocabulary(combined_text)
         )
         
         filler_analysis, pace_analysis, vocabulary_analysis = analyses
@@ -117,9 +119,17 @@ class SpeechAnalyzerService:
             "total_words": total_words,
             "speaking_time_seconds": total_speaking_time,
             "vocabulary_diversity": vocabulary_analysis.get("diversity_score", 0),
-            "confidence_score": self._calculate_confidence_score(filler_analysis, pace_analysis),
+            "vocabulary_metrics": {
+                "top_words": vocabulary_analysis.get("top_words", []),
+                "unique_word_count": vocabulary_analysis.get("unique_word_count", 0),
+                "total_word_count": vocabulary_analysis.get("total_word_count", 0)
+            },
+            "confidence_score": self._calculate_confidence_score(filler_analysis, pace_analysis, vocabulary_analysis),
             "clarity_score": self._calculate_clarity_score(pace_analysis)
         }
+        
+        # Add vocabulary suggestions
+        suggestions.extend(vocabulary_analysis.get("suggestions", []))
         
         return {
             "metrics": metrics,
@@ -158,31 +168,30 @@ class SpeechAnalyzerService:
             "suggestions": suggestions
         }
     
-    async def _analyze_vocabulary_diversity(self, text: str) -> Dict:
-        """Analyze vocabulary diversity."""
+    async def _analyze_vocabulary(self, text: str) -> Dict:
+        """Analyze vocabulary diversity and usage."""
         if not text:
-            return {"diversity_score": 0.0}
+            return {
+                "diversity_score": 0.0,
+                "unique_word_count": 0,
+                "total_word_count": 0,
+                "top_words": [],
+                "suggestions": []
+            }
         
-        # Tokenize text
-        tokens = word_tokenize(text.lower())
+        # Get basic analysis
+        analysis = self.vocabulary_analyzer.analyze_text(text)
         
-        # Filter out punctuation
-        words = [word for word in tokens if word.isalnum()]
+        # Generate suggestions
+        suggestions = self.vocabulary_analyzer.generate_improvement_suggestions(analysis, text)
         
-        if not words:
-            return {"diversity_score": 0.0}
-        
-        # Calculate type-token ratio (unique words / total words)
-        unique_words = set(words)
-        diversity_score = len(unique_words) / len(words)
-        
+        # Combine results
         return {
-            "diversity_score": diversity_score,
-            "unique_word_count": len(unique_words),
-            "total_word_count": len(words)
+            **analysis,
+            "suggestions": suggestions
         }
     
-    def _calculate_confidence_score(self, filler_analysis: Dict, pace_analysis: Dict) -> float:
+    def _calculate_confidence_score(self, filler_analysis: Dict, pace_analysis: Dict, vocabulary_analysis: Dict = None) -> float:
         """Calculate a confidence score based on various metrics."""
         filler_percentage = filler_analysis.get("filler_percentage", 0)
         pace_category = pace_analysis.get("pace_category", "optimal")
@@ -204,6 +213,16 @@ class SpeechAnalyzerService:
             score -= 5
         elif pace_category == "too_fast":
             score -= 15
+        
+        # Adjust based on vocabulary diversity
+        if vocabulary_analysis:
+            diversity_score = vocabulary_analysis.get("diversity_score", 0)
+            if diversity_score < 0.4:
+                score -= 15
+            elif diversity_score < 0.6:
+                score -= 5
+            elif diversity_score > 0.8:
+                score += 5
         
         # Ensure score is between 0 and 100
         score = max(0, min(100, score))
