@@ -11,8 +11,10 @@ import asyncio
 
 # Import our modules
 from api.routes import transcript_router, audio_router
+from models.database import init_db
+
+# Import MCP server
 from mcp.server import setup_mcp_server
-from models.database import init_db, get_db
 from api.services.database_service import DatabaseService
 from analyzer.analyzer_service import SpeechAnalyzerService
 
