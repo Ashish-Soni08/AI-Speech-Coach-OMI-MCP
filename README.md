@@ -1,4 +1,4 @@
-# AI-Speech-Coach
+ # AI-Speech-Coach
 
 An AI-powered tool providing personalized feedback and guidance to improve articulation and speaking skills
 
@@ -13,4 +13,4 @@ An AI-powered tool providing personalized feedback and guidance to improve artic
 
 ![AI_Speech_Coach](assets/speech_coach.jpg)
 
- **Built for the MCP Hackathon at AGI House.** 
+ **Built for the MCP Hackathon at AGI House.**
