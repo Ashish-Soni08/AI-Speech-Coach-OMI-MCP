@@ -61,8 +61,13 @@ class VocabularyAnalyzer:
                 "rare_words": []
             }
         
-        # Tokenize text
-        tokens = word_tokenize(text.lower())
+        # Simple tokenization for testing
+        try:
+            # Try to use NLTK's word_tokenize
+            tokens = word_tokenize(text.lower())
+        except:
+            # Fall back to simple splitting if NLTK isn't available
+            tokens = text.lower().split()
         
         # Filter out punctuation and stopwords
         words = [word for word in tokens if word.isalnum() and word not in self.stopwords]
