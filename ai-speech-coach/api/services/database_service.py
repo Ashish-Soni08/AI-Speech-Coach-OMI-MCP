@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func, and_, desc
+from sqlalchemy import func, and_, desc, between
 from typing import List, Dict, Any, Optional
 import logging
 from datetime import datetime, date, timedelta
@@ -488,3 +488,93 @@ class DatabaseService:
             "progress": 0,
             "estimated_completion": None
         }
+    
+    async def get_all_users(
+        self, 
+        session: AsyncSession
+    ) -> List[User]:
+        """
+        Get all active users in the system.
+        
+        Args:
+            session: Database session
+            
+        Returns:
+            List of User objects
+        """
+        query = select(User)
+        result = await session.execute(query)
+        users = result.scalars().all()
+        return users
+    
+    async def get_user_daily_conversations(
+        self, 
+        session: AsyncSession, 
+        user_id: int, 
+        date: date
+    ) -> List[Conversation]:
+        """
+        Get all conversations for a user on a specific date.
+        
+        Args:
+            session: Database session
+            user_id: User ID
+            date: Date to retrieve conversations for
+            
+        Returns:
+            List of Conversation objects
+        """
+        # Calculate start and end of day
+        start_day = datetime.combine(date, datetime.min.time())
+        end_day = datetime.combine(date, datetime.max.time())
+        
+        # Query conversations within date range
+        query = select(Conversation).where(
+            and_(
+                Conversation.user_id == user_id,
+                Conversation.start_timestamp >= start_day,
+                Conversation.end_timestamp <= end_day
+            )
+        )
+        
+        result = await session.execute(query)
+        conversations = result.scalars().all()
+        
+        return conversations
+    
+    async def get_conversation_segments(
+        self, 
+        session: AsyncSession, 
+        conversation_id: int
+    ) -> List[Dict]:
+        """
+        Get all speech segments for a conversation.
+        
+        Args:
+            session: Database session
+            conversation_id: Conversation ID
+            
+        Returns:
+            List of speech segments
+        """
+        query = select(SpeechSegment).where(
+            SpeechSegment.conversation_id == conversation_id
+        )
+        
+        result = await session.execute(query)
+        db_segments = result.scalars().all()
+        
+        # Convert to format expected by analyzer service
+        segments = []
+        for segment in db_segments:
+            segments.append({
+                "text_content": segment.text_content,
+                "speaker_identification": segment.speaker_identification,
+                "is_user_speaking": segment.is_user_speaking,
+                "start_time": segment.start_time,
+                "end_time": segment.end_time,
+                "duration_seconds": segment.duration_seconds,
+                "word_count": segment.word_count
+            })
+        
+        return segments

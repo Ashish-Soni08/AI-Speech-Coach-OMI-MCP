@@ -23,9 +23,18 @@ Our vision is to create an AI coach that helps users become more articulate by:
 As the source material notes, becoming articulate is about "feeling your way along to see what word was appropriate for what moment" and learning to "craft your words carefully." Our AI coach will help users develop this skill systematically.
 
 ## Project Commands
-- Build: TBD - To be updated once build system is established
-- Test: TBD - To be updated once test framework is implemented
-- Lint: TBD - To be updated once linting tools are configured
+- Backend:
+  - Start Backend: `cd ai-speech-coach && python main.py`
+  - Install Dependencies: `cd ai-speech-coach && pip install -r requirements.txt`
+  - Run Tests: `cd ai-speech-coach && pytest`
+  
+- Frontend:
+  - Start Development Server: `cd frontend && npm run dev`
+  - Build for Production: `cd frontend && npm run build`
+  - Install Dependencies: `cd frontend && npm install`
+  
+- Database Setup:
+  - Create PostgreSQL database: `createdb speech_coach`
 
 ## Code Style Guidelines
 - **Naming**: Use descriptive names - camelCase for variables/functions, PascalCase for classes
