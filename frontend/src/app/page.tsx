@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getDemoUserStatistics, getDemoAnalysisHistory } from "@/lib/api";
+import { getUserStatistics, getUserHistory, getDemoUserStatistics, getDemoAnalysisHistory } from "@/lib/api";
 import { UserStatistics, AnalysisResult } from "@/lib/types";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardCards } from "@/components/dashboard-cards";

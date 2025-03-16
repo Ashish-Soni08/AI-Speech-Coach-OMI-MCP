@@ -75,23 +75,23 @@ start_dev() {
   
   # Install backend dependencies
   echo -e "${BLUE}Installing backend dependencies...${NC}"
-  cd ai-speech-coach && pip install -r requirements.txt
+  cd /workspaces/AI-Speech-Coach-OMI-MCP/ai-speech-coach && pip install -r requirements.txt
   
   # Initialize the database
   echo -e "${BLUE}Initializing the database...${NC}"
-  cd ai-speech-coach && python setup_database.py
+  cd /workspaces/AI-Speech-Coach-OMI-MCP/ai-speech-coach && python setup_database.py
   
   # Start the backend server
   echo -e "${BLUE}Starting the backend server...${NC}"
-  cd ai-speech-coach && python main.py &
+  cd /workspaces/AI-Speech-Coach-OMI-MCP/ai-speech-coach && python main.py &
   
   # Install frontend dependencies
   echo -e "${BLUE}Installing frontend dependencies...${NC}"
-  cd frontend && npm install
+  cd /workspaces/AI-Speech-Coach-OMI-MCP/frontend && npm install
   
   # Start the frontend server
   echo -e "${BLUE}Starting the frontend server...${NC}"
-  cd frontend && npm run dev
+  cd /workspaces/AI-Speech-Coach-OMI-MCP/frontend && npm run dev
 }
 
 # Function to start the production environment
