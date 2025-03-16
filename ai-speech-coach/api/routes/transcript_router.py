@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
+import os
 
 from models.database import get_db
 from models.schemas import TranscriptRequest, SpeechAnalysisResponse
@@ -24,19 +25,26 @@ logger = logging.getLogger(__name__)
 async def analyze_transcript(
     request: TranscriptRequest,
     session: AsyncSession = Depends(get_db),
-    store_results: bool = Query(True, description="Whether to store analysis results in the database")
+    store_results: bool = Query(True, description="Whether to store analysis results in the database"),
+    omi_api_key: str = Header(None, alias="X-OMI-API-Key")
 ):
     """
     Analyze transcript segments and provide coaching feedback.
     
-    This endpoint receives a list of transcript segments from OMI device,
-    analyzes them for speech patterns, and returns coaching insights.
+    This endpoint receives transcript segments from OMI devices,
+    analyzes them, and returns coaching feedback.
     
     - Detects filler words
     - Measures speaking pace
     - Analyzes vocabulary diversity
     - Provides personalized improvement suggestions
     """
+    # Validate OMI API key if in production
+    if os.getenv("ENVIRONMENT") == "production":
+        expected_api_key = os.getenv("OMI_API_KEY")
+        if not expected_api_key or omi_api_key != expected_api_key:
+            raise HTTPException(status_code=403, detail="Invalid or missing API key")
+            
     logger.info(f"Received transcript analysis request for session {request.session_id}")
     
     try:
